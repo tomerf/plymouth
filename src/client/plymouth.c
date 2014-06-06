@@ -878,9 +878,9 @@ main (int    argc,
       char **argv)
 {
         state_t state = { 0 };
-        bool should_help, should_quit, should_ping, should_check_for_active_vt, should_sysinit, should_ask_for_password, should_show_splash, should_hide_splash, should_wait, should_be_verbose, report_error, should_get_plugin_path;
+        bool should_help, should_ping, should_check_for_active_vt, should_sysinit, should_wait, should_be_verbose, report_error, should_get_plugin_path;
         bool is_connected;
-        char *status, *chroot_dir, *ignore_keystroke;
+        char *ignore_keystroke;
         int exit_code;
 
         exit_code = 0;
@@ -895,16 +895,10 @@ main (int    argc,
                                         "help", "This help message", PLY_COMMAND_OPTION_TYPE_FLAG,
                                         "debug", "Enable verbose debug logging", PLY_COMMAND_OPTION_TYPE_FLAG,
                                         "get-splash-plugin-path", "Get directory where splash plugins are installed", PLY_COMMAND_OPTION_TYPE_FLAG,
-                                        "newroot", "Tell boot daemon that new root filesystem is mounted", PLY_COMMAND_OPTION_TYPE_STRING,
-                                        "quit", "Tell boot daemon to quit", PLY_COMMAND_OPTION_TYPE_FLAG,
                                         "ping", "Check of boot daemon is running", PLY_COMMAND_OPTION_TYPE_FLAG,
                                         "has-active-vt", "Check if boot daemon has an active vt", PLY_COMMAND_OPTION_TYPE_FLAG,
                                         "sysinit", "Tell boot daemon root filesystem is mounted read-write", PLY_COMMAND_OPTION_TYPE_FLAG,
-                                        "show-splash", "Show splash screen", PLY_COMMAND_OPTION_TYPE_FLAG,
-                                        "hide-splash", "Hide splash screen", PLY_COMMAND_OPTION_TYPE_FLAG,
-                                        "ask-for-password", "Ask user for password", PLY_COMMAND_OPTION_TYPE_FLAG,
                                         "ignore-keystroke", "Remove sensitivity to a keystroke", PLY_COMMAND_OPTION_TYPE_STRING,
-                                        "update", "Tell boot daemon an update about boot progress", PLY_COMMAND_OPTION_TYPE_STRING,
                                         "details", "Tell boot daemon there were errors during boot", PLY_COMMAND_OPTION_TYPE_FLAG,
                                         "wait", "Wait for boot daemon to quit", PLY_COMMAND_OPTION_TYPE_FLAG,
                                         NULL);
@@ -1071,16 +1065,10 @@ main (int    argc,
                                         "help", &should_help,
                                         "debug", &should_be_verbose,
                                         "get-splash-plugin-path", &should_get_plugin_path,
-                                        "newroot", &chroot_dir,
-                                        "quit", &should_quit,
                                         "ping", &should_ping,
                                         "has-active-vt", &should_check_for_active_vt,
                                         "sysinit", &should_sysinit,
-                                        "show-splash", &should_show_splash,
-                                        "hide-splash", &should_hide_splash,
-                                        "ask-for-password", &should_ask_for_password,
                                         "ignore-keystroke", &ignore_keystroke,
-                                        "update", &status,
                                         "wait", &should_wait,
                                         "details", &report_error,
                                         NULL);
@@ -1136,26 +1124,7 @@ main (int    argc,
 
         ply_boot_client_attach_to_event_loop (state.client, state.loop);
 
-        if (should_show_splash) {
-                ply_boot_client_tell_daemon_to_show_splash (state.client,
-                                                            (ply_boot_client_response_handler_t)
-                                                            on_success,
-                                                            (ply_boot_client_response_handler_t)
-                                                            on_failure, &state);
-        } else if (should_hide_splash) {
-                ply_boot_client_tell_daemon_to_hide_splash (state.client,
-                                                            (ply_boot_client_response_handler_t)
-                                                            on_success,
-                                                            (ply_boot_client_response_handler_t)
-                                                            on_failure, &state);
-        } else if (should_quit) {
-                ply_boot_client_tell_daemon_to_quit (state.client,
-                                                     false,
-                                                     (ply_boot_client_response_handler_t)
-                                                     on_success,
-                                                     (ply_boot_client_response_handler_t)
-                                                     on_failure, &state);
-        } else if (should_ping) {
+        if (should_ping) {
                 ply_boot_client_ping_daemon (state.client,
                                              (ply_boot_client_response_handler_t)
                                              on_success,
@@ -1167,23 +1136,6 @@ main (int    argc,
                                                           on_success,
                                                           (ply_boot_client_response_handler_t)
                                                           on_failure, &state);
-        } else if (status != NULL) {
-                ply_boot_client_update_daemon (state.client, status,
-                                               (ply_boot_client_response_handler_t)
-                                               on_success,
-                                               (ply_boot_client_response_handler_t)
-                                               on_failure, &state);
-        } else if (should_ask_for_password) {
-                password_answer_state_t answer_state = { 0 };
-
-                answer_state.state = &state;
-                answer_state.number_of_tries_left = 1;
-                ply_boot_client_ask_daemon_for_password (state.client,
-                                                         NULL,
-                                                         (ply_boot_client_answer_handler_t)
-                                                         on_password_answer,
-                                                         (ply_boot_client_response_handler_t)
-                                                         on_password_answer_failure, &answer_state);
         } else if (ignore_keystroke) {
                 ply_boot_client_ask_daemon_to_ignore_keystroke (state.client,
                                                                 ignore_keystroke,
@@ -1197,12 +1149,6 @@ main (int    argc,
                                                                    on_success,
                                                                    (ply_boot_client_response_handler_t)
                                                                    on_failure, &state);
-        } else if (chroot_dir) {
-                ply_boot_client_tell_daemon_to_change_root (state.client, chroot_dir,
-                                                            (ply_boot_client_response_handler_t)
-                                                            on_success,
-                                                            (ply_boot_client_response_handler_t)
-                                                            on_failure, &state);
         } else if (should_wait) {
         } // Do nothing
         else if (report_error) {

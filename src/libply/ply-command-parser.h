@@ -63,10 +63,6 @@ void ply_command_parser_get_options (ply_command_parser_t *parser,
                                      const char           *option_name, /*
                                                                          * void *      option_result */
                                      ...);
-void ply_command_parser_get_option (ply_command_parser_t *parser,
-                                    const char           *option_name,
-                                    void                 *option_result,
-                                    bool                 *option_is_set);
 void ply_command_parser_get_command_options (ply_command_parser_t *parser,
                                              const char           *command_name,
                                              const char           *option_name, /*
